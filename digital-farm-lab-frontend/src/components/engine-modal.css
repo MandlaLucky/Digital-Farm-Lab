@@ -1,0 +1,51 @@
+/* Self-contained modal. Uses the same palette as the rest of the dashboard.
+   All classes prefixed .engine-modal-* to avoid collisions. */
+
+.engine-modal-backdrop {
+  position: fixed; inset: 0; background: rgba(0,0,0,.6); backdrop-filter: blur(4px);
+  z-index: 1000; display: grid; place-items: center; padding: 24px;
+  animation: engine-fade-in .15s ease-out;
+}
+.engine-modal {
+  width: min(560px, 100%); max-height: calc(100vh - 48px); overflow-y: auto;
+  background: #0b1714; color: #d9e6e2; border: 1px solid rgba(175,211,198,.22); border-radius: 12px;
+  padding: 20px 24px 24px; box-shadow: 0 24px 80px rgba(0,0,0,.6);
+  animation: engine-pop-in .18s cubic-bezier(.16,1,.3,1);
+  font-family: 'DM Sans', sans-serif;
+}
+@keyframes engine-fade-in { from { opacity: 0 } to { opacity: 1 } }
+@keyframes engine-pop-in { from { opacity: 0; transform: translateY(6px) scale(.98) } to { opacity: 1; transform: none } }
+.engine-modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+.engine-modal-header div { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.engine-modal-header span { font-size: 10px; text-transform: uppercase; letter-spacing: .08em; color: #6b7280; font-family: 'JetBrains Mono', monospace; }
+.engine-modal-header strong { font-size: 15px; font-weight: 600; color: #eff8f4; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.engine-modal-close { background: transparent; border: 1px solid rgba(175,211,198,.22); border-radius: 6px; color: #9ca3af; font-size: 18px; line-height: 1; padding: 2px 10px 4px; cursor: pointer; transition: all .12s ease; }
+.engine-modal-close:hover { background: #11231e; color: #eff8f4; }
+.engine-presets { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+.engine-presets button { background: #0e1d19; border: 1px solid rgba(175,211,198,.13); border-radius: 6px; padding: 6px 10px; font-size: 12px; color: #718c83; cursor: pointer; transition: all .12s ease; }
+.engine-presets button:hover { border-color: rgba(175,211,198,.3); color: #d9e6e2; }
+.engine-presets button.active { background: rgba(85,216,139,.12); border-color: #55d88b; color: #55d88b; }
+.engine-sliders { display: flex; flex-direction: column; gap: 16px; margin-bottom: 20px; }
+.engine-slider { display: grid; grid-template-columns: 118px 1fr 110px; align-items: center; gap: 12px; font-size: 13px; }
+.engine-slider > span { color: #718c83; text-transform: uppercase; font-size: 11px; letter-spacing: .06em; font-family: 'JetBrains Mono', monospace; }
+.engine-slider input[type="range"] { width: 100%; accent-color: #55d88b; cursor: pointer; }
+.engine-slider > strong { text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #d9e6e2; }
+.engine-run { width: 100%; background: #55d88b; color: #07100e; border: none; border-radius: 8px; padding: 10px 16px; font-size: 14px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: background .12s ease; }
+.engine-run:hover:not(:disabled) { background: #76eca5; }
+.engine-run:disabled { opacity: .6; cursor: wait; }
+.engine-error { margin-top: 12px; padding: 10px 12px; background: rgba(230,110,102,.12); border: 1px solid rgba(230,110,102,.3); border-radius: 6px; color: #fca5a5; font-size: 13px; line-height: 1.5; }
+.engine-results { margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(175,211,198,.13); animation: engine-fade-in .2s ease-out; }
+.engine-results-title { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 12px; }
+.engine-results-title span { font-size: 10px; text-transform: uppercase; letter-spacing: .08em; color: #6b7280; font-family: 'JetBrains Mono', monospace; }
+.engine-results-title small { font-size: 11px; color: #6b7280; }
+.engine-result-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.engine-result-cell { display: flex; flex-direction: column; gap: 4px; padding: 12px; background: #0e1d19; border: 1px solid rgba(175,211,198,.13); border-radius: 8px; }
+.engine-result-cell > span { font-size: 10px; text-transform: uppercase; letter-spacing: .06em; color: #6b7280; font-family: 'JetBrains Mono', monospace; }
+.engine-result-cell > strong { font-size: 18px; font-family: 'JetBrains Mono', monospace; color: #eff8f4; font-weight: 600; }
+.engine-result-cell > strong small { font-size: 11px; color: #718c83; font-weight: 400; }
+.engine-result-cell > em { font-style: normal; font-size: 12px; color: #9ca3af; font-family: 'JetBrains Mono', monospace; }
+.engine-result-cell > em.up { color: #55d88b; }
+.engine-result-cell > em.down { color: #e66e66; }
+.engine-result-cell > em.flat { color: #6b7280; }
+.engine-result-cell > i { font-size: 10px; color: #425c54; font-style: normal; font-family: 'JetBrains Mono', monospace; }
+.engine-disclaimer { margin-top: 16px; padding: 10px 12px; background: rgba(220,173,81,.08); border-left: 3px solid #dcad51; border-radius: 4px; font-size: 12px; color: #fde047; line-height: 1.5; }

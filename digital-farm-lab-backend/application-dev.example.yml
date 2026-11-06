@@ -1,0 +1,14 @@
+# Copy to src/main/resources/application-dev.yml and fill in.
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/digitalfarm_DB
+    username: postgres
+    password: <your-password>
+  jpa:
+    show-sql: true
+security:
+  jwt:
+    secret: <at-least-32-byte-secret>
+logging:
+  level:
+    com.mlm.digitalfarm: DEBUG

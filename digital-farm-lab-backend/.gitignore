@@ -1,0 +1,20 @@
+﻿# Gradle
+.gradle/
+build/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# Secrets
+.env
+.env.local
+application-dev.yml
+application-prod.yml
+application-local.yml
+
+# OS / Logs
+.DS_Store
+Thumbs.db
+*.log
