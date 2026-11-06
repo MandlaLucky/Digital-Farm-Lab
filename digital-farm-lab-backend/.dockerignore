@@ -1,0 +1,31 @@
+# Gradle
+build/
+.gradle/
+gradle-wrapper.jar.tmp
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Secrets (never copied into build context)
+.env
+.env.local
+src/main/resources/application-dev.yml
+src/main/resources/application-prod.yml
+src/main/resources/application-local.yml
+application-dev.yml
+application-prod.yml
+application-local.yml
+
+# Git
+.git/
+.gitignore
+.github/

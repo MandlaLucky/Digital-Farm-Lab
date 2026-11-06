@@ -31,7 +31,7 @@ export default function ScenarioManagement({ tab, onTab, farms, presets, mine, o
   farms: PersistedFarm[]
   presets: ScenarioRecord[]
   mine: ScenarioRecord[]
-  onSave: (scenario: ScenarioRecord) => ScenarioRecord
+  onSave: (scenario: ScenarioRecord) => ScenarioRecord | Promise<ScenarioRecord> | Promise<ScenarioRecord>
   onDelete: (id: string) => void
   onRun: (farm: PersistedFarm, scenario: ScenarioRecord) => void
 }) {

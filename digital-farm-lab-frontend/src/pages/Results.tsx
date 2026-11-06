@@ -81,6 +81,21 @@ export default function Results({ run, history, onSelect, onBrowse, onSimulate }
       </div>
     )
   }
+  const shareResults = async () => {
+    const text = `I scored ${run.scores.overall}/100 on "${run.scenarioName}" in Digital Farm Lab!`
+    const url = window.location.href
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: 'Digital Farm Lab', text, url })
+      } else if (navigator.clipboard) {
+        await navigator.clipboard.writeText(text + ' ' + url)
+        alert('Copied to clipboard')
+      } else {
+        alert(text + ' ' + url)
+      }
+    } catch { /* user cancelled */ }
+  }
+
   const d = run.details
   const sc = run.scores
   const dec = run.decisions
@@ -109,7 +124,7 @@ export default function Results({ run, history, onSelect, onBrowse, onSimulate }
       <div className="page-title">
         <div><span>5 · RESULTS & LEARNING</span><strong>{run.scenarioName}</strong>
           <p>{run.farmName} · {run.category} · {run.difficulty} · {run.complete ? 'Completed' : `Stopped at day ${run.dayReached} of ${run.duration}`} · {new Date(run.finishedAt).toLocaleString()}</p></div>
-        <div className="title-actions"><Button onClick={onSimulate}><Icon name="reset" size={15} /> Run again</Button><Button className="primary-action" onClick={onBrowse}>Try another scenario <Icon name="arrow" size={15} /></Button></div>
+        <div className="title-actions"><Button onClick={shareResults}><Icon name="arrow" size={15} /> Share</Button><Button onClick={onSimulate}><Icon name="reset" size={15} /> Run again</Button><Button className="primary-action" onClick={onBrowse}>Try another scenario <Icon name="arrow" size={15} /></Button></div>
       </div>
 
       <section className="summary-card">

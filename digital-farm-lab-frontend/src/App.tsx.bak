@@ -1,0 +1,250 @@
+import { useEffect, useState } from 'react'
+import { Button, Icon } from './components/ui'
+import { emptyFarm, normalizeFarm, type FarmConfig } from './farmTypes'
+import FarmBuilder from './pages/FarmBuilder'
+import FarmSetup from './pages/FarmSetup'
+import Results from './pages/Results'
+import ScenarioManagement, { type ScenarioTab } from './pages/scenarios/ScenarioManagement'
+import SimulationWorkspace from './pages/SimulationWorkspace'
+import type { PersistedFarm, RunRecord, ScenarioRecord } from './scenarioTypes'
+import { demoFarm, presetScenarios, uid, usePersistentState } from './store'
+import { api } from './api'
+import TrainerPage from './pages/Trainer'
+
+type Section = 'setup' | 'builder' | 'scenarios' | 'simulation' | 'results' | 'trainer'
+
+const sections: { id: Section; label: string }[] = [
+  { id: 'setup', label: 'Farm Setup' },
+  { id: 'builder', label: 'Farm Builder' },
+  { id: 'scenarios', label: 'Scenario Management' },
+  { id: 'simulation', label: 'Simulation Workspace' },
+  { id: 'results', label: 'Results & Learning' },
+  { id: 'trainer', label: 'Trainer' },
+]
+
+export default function App() {
+  const [section, setSection] = useState<Section>('setup')
+  const [scenarioTab, setScenarioTab] = useState<ScenarioTab>('browse')
+  const [rawDraft, setDraft] = usePersistentState<FarmConfig>('dfl.draft', emptyFarm)
+  const draft = normalizeFarm(rawDraft)
+  const [draftId, setDraftId] = usePersistentState<string>('dfl.draftId', '')
+  const [savedFarms, setSavedFarms] = useState<PersistedFarm[]>([])
+  const [mine, setMine] = useState<ScenarioRecord[]>([])
+  const [runs, setRuns] = useState<RunRecord[]>([])
+  const [backendMsg, setBackendMsg] = useState('')
+  const [sim, setSim] = useState<{ farm: FarmConfig; scenario?: ScenarioRecord; key: number } | null>(null)
+  const [currentRun, setCurrentRun] = useState<RunRecord | null>(null)
+
+  // Load persisted data from the Spring Boot backend on mount
+  useEffect(() => {
+    let cancelled = false
+    Promise.all([api.listFarms(), api.listScenarios(), api.listRuns()])
+      .then(([farms, scenarios, backendRuns]) => {
+        if (cancelled) return
+        setSavedFarms(farms.map(f => normalizeFarm(f as unknown as FarmConfig) as PersistedFarm))
+        setMine(scenarios.map(toScenarioRecord))
+        setRuns(backendRuns.map(toRunRecord))
+        setBackendMsg('')
+      })
+      .catch(err => {
+        if (cancelled) return
+        console.warn('[backend load failed]', err)
+        setBackendMsg(`Backend: ${err.message}`)
+      })
+    return () => { cancelled = true }
+  }, [])
+
+  const farms = [demoFarm, ...savedFarms.filter(f => f.id !== demoFarm.id)]
+  const ready = draft.fields.length > 0 && draft.waterSources.length > 0
+
+  const patchDraft = (patch: Partial<FarmConfig>) => setDraft(current => ({ ...normalizeFarm(current), ...patch }))
+
+  const saveFarm = async () => {
+    try {
+      const payload = { ...draft } as Record<string, unknown>
+      if (draftId && draftId !== demoFarm.id) {
+        const updated = await api.updateFarm(draftId, payload)
+        setSavedFarms(list => list.map(f => f.id === draftId ? normalizeFarm(updated as unknown as FarmConfig) as PersistedFarm : f))
+      } else {
+        const created = await api.createFarm(payload)
+        setDraftId(created.id)
+        setSavedFarms(list => [normalizeFarm(created as unknown as FarmConfig) as PersistedFarm, ...list])
+      }
+      setBackendMsg('')
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Save failed'
+      setBackendMsg(`Backend: ${msg}`)
+    }
+  }
+
+  const loadFarm = (farm: PersistedFarm) => {
+    const { id, ...config } = farm
+    setDraft(config)
+    setDraftId(id)
+  }
+
+  const startFreeSim = (farm: FarmConfig) => { setSim(s => ({ farm, key: (s?.key ?? 0) + 1 })); setSection('simulation') }
+
+  const runScenario = (farm: PersistedFarm, scenario: ScenarioRecord) => {
+    const fields = farm.fields
+      .filter(f => scenario.participatingFields.includes(f.id))
+      .map(f => ({ ...f, crop: (scenario.crops.find(c => c.fieldId === f.id)?.crop ?? f.crop) as typeof f.crop }))
+    setSim(s => ({ farm: { ...farm, fields: fields.length ? fields : farm.fields }, scenario, key: (s?.key ?? 0) + 1 }))
+    setSection('simulation')
+  }
+
+  const saveScenario = async (scenario: ScenarioRecord): Promise<ScenarioRecord> => {
+    try {
+      const payload = { ...scenario } as Record<string, unknown>
+      if (scenario.id) {
+        const updated = await api.updateScenario(scenario.id, payload)
+        const record = toScenarioRecord(updated)
+        setMine(list => list.map(s => s.id === scenario.id ? record : s))
+        return record
+      }
+      const created = await api.createScenario(payload)
+      const record = toScenarioRecord(created)
+      setMine(list => [record, ...list])
+      return record
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Save failed'
+      setBackendMsg(`Backend: ${msg}`)
+      // Optimistic client-side copy so the UI keeps working
+      const fallback: ScenarioRecord = { ...scenario, id: scenario.id || uid('scn'), source: 'mine', updatedAt: new Date().toISOString() }
+      setMine(list => list.some(s => s.id === fallback.id) ? list.map(s => s.id === fallback.id ? fallback : s) : [fallback, ...list])
+      return fallback
+    }
+  }
+
+  const deleteScenario = async (id: string) => {
+    try { await api.deleteScenario(id) } catch (err) { console.warn('Delete failed', err) }
+    setMine(list => list.filter(s => s.id !== id))
+  }
+
+  const finishRun = async (run: RunRecord) => {
+    // Navigate immediately so the user sees the rich client-side results
+    setRuns(list => [run, ...list].slice(0, 25))
+    setCurrentRun(run)
+    setSection('results')
+
+    // Fire-and-forget: persist to backend + compute real engine output
+    try {
+      const irrigationMm = Math.max(0, Math.min(900, Math.round(run.decisions.flowRate * 20)))
+      const fertiliserKgHa = Math.max(0, Math.min(300, Math.round(run.decisions.nitrogen)))
+      const irrigationReductionPct = Math.max(0, Math.min(50, Math.round(((22 - run.decisions.flowRate) / 22) * 100)))
+
+      const saved = await api.createRun({
+        scenarioId: run.scenarioId || null,
+        params: {
+          irrigationMm,
+          fertiliserKgHa,
+          plantingDate: '2026-10-15',
+          irrigationReductionPct,
+        },
+        record: run,
+      })
+
+      const enriched: RunRecord = {
+        ...run,
+        serverId: saved.id,
+        engineResults: saved.results,
+        engineBaseline: saved.baseline,
+      }
+      setRuns(list => list.map(r => r.id === run.id ? enriched : r))
+      setCurrentRun(prev => prev && prev.id === run.id ? enriched : prev)
+      setBackendMsg('')
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Engine call failed'
+      console.warn('[engine run failed]', err)
+      setBackendMsg(`Backend: ${msg}`)
+    }
+  }
+
+  const goSimulation = () => {
+    if (sim) setSection('simulation')
+    else if (ready) startFreeSim(draft)
+    else setSection('simulation')
+  }
+  const go = (id: Section) => (id === 'simulation' ? goSimulation() : setSection(id))
+
+  return (
+    <div className="app">
+      <header className="app-nav">
+        <div className="sim-brand"><div className="brand-symbol"><Icon name="leaf" size={19} /></div><div><strong>DIGITAL FARM LAB</strong><span>DIGITAL TWIN SIMULATOR</span></div></div>
+        <nav aria-label="Main sections">
+          {sections.map((s, i) => (
+            <Button key={s.id} className={section === s.id ? 'active' : ''} onClick={() => go(s.id)} aria-current={section === s.id ? 'page' : undefined}><i>{i + 1}</i>{s.label}</Button>
+          ))}
+        </nav>
+        <div className="profile">AM</div>
+      </header>
+
+      {backendMsg && <div className="backend-banner">{backendMsg}</div>}
+
+      <div className="app-content">
+        {section === 'setup' && <FarmSetup farm={draft} farms={farms} onChange={patchDraft} onLoad={loadFarm} onNext={() => setSection('builder')} />}
+        {section === 'builder' && <FarmBuilder farm={draft} setFarm={fn => setDraft(c => fn(normalizeFarm(c)))} onSave={saveFarm} onBack={() => setSection('setup')} onSimulate={() => startFreeSim(draft)} farms={farms} onLoad={loadFarm} />}
+        {section === 'scenarios' && <ScenarioManagement tab={scenarioTab} onTab={setScenarioTab} farms={farms} presets={presetScenarios} mine={mine} onSave={saveScenario} onDelete={deleteScenario} onRun={runScenario} />}
+        {section === 'simulation' && (sim
+          ? <SimulationWorkspace key={sim.key} farm={sim.farm} scenario={sim.scenario} onBack={() => setSection('builder')} onScenarios={() => setSection('scenarios')} onFinish={finishRun} />
+          : (
+            <div className="page center-page">
+              <div className="scenario-empty-card">
+                <div><Icon name="field" size={29} /></div><span>NOTHING TO SIMULATE</span><strong>Choose a farm to simulate</strong>
+                <p>Build a farm with at least one field and a water source, or try the demo farm.</p>
+                <div className="empty-actions"><Button onClick={() => setSection('builder')}>Farm Builder</Button><Button onClick={() => startFreeSim(demoFarm)}><Icon name="play" size={14} /> Use demo farm</Button></div>
+              </div>
+            </div>
+          ))}
+        {section === 'results' && <Results run={currentRun ?? runs[0] ?? null} history={runs} onSelect={setCurrentRun} onBrowse={() => { setScenarioTab('browse'); setSection('scenarios') }} onSimulate={goSimulation} />}
+        {section === 'trainer' && <TrainerPage />}
+      </div>
+    </div>
+  )
+}
+
+function toScenarioRecord(raw: Record<string, unknown>): ScenarioRecord {
+  return {
+    id: String(raw.id ?? ''),
+    name: String(raw.name ?? 'Unnamed scenario'),
+    description: String(raw.description ?? ''),
+    category: (raw.category as ScenarioRecord['category']) ?? 'Irrigation Scheduling',
+    farmId: String(raw.farmId ?? ''),
+    participatingFields: Array.isArray(raw.participatingFields) ? (raw.participatingFields as string[]) : [],
+    crops: Array.isArray(raw.crops) ? (raw.crops as ScenarioRecord['crops']) : [],
+    startingConditions: (raw.startingConditions as ScenarioRecord['startingConditions']) ?? {
+      soilMoisture: 55, temperature: 24, rainfall: 8, budget: 25000, pestPressure: 5,
+    },
+    adjustableVariables: Array.isArray(raw.adjustableVariables) ? (raw.adjustableVariables as ScenarioRecord['adjustableVariables']) : [],
+    duration: Number(raw.duration ?? 120),
+    difficulty: (raw.difficulty as ScenarioRecord['difficulty']) ?? 'Intermediate',
+    learningObjectives: Array.isArray(raw.learningObjectives) ? (raw.learningObjectives as string[]) : [],
+    source: 'mine',
+    updatedAt: raw.createdAt ? String(raw.createdAt) : undefined,
+  }
+}
+
+function toRunRecord(raw: Record<string, unknown>): RunRecord {
+  const base = raw as unknown as Partial<RunRecord>
+  return {
+    id: String(base.id ?? uid('run')),
+    scenarioId: base.scenarioId,
+    serverId: String(raw.id ?? ''),
+    finishedAt: String(base.finishedAt ?? raw.createdAt ?? new Date().toISOString()),
+    complete: Boolean(base.complete),
+    farmName: String(base.farmName ?? 'Unknown farm'),
+    scenarioName: String(base.scenarioName ?? 'Run'),
+    category: String(base.category ?? 'Free play'),
+    difficulty: String(base.difficulty ?? 'Open'),
+    duration: Number(base.duration ?? 120),
+    dayReached: Number(base.dayReached ?? 1),
+    series: Array.isArray(base.series) ? base.series : [],
+    decisions: base.decisions ?? { targetMoisture: 62, flowRate: 22, nitrogen: 118 },
+    metrics: base.metrics ?? { moisture: 0, growth: 0, waterUsed: 0, yieldTHa: 0, stress: 0 },
+    scores: base.scores ?? { moisture: 0, water: 0, nutrients: 0, overall: 0 },
+    objectives: Array.isArray(base.objectives) ? base.objectives : [],
+    engineResults: (raw.results as RunRecord['engineResults']) ?? base.engineResults,
+    engineBaseline: (raw.baseline as RunRecord['engineBaseline']) ?? base.engineBaseline,
+    details: base.details,
+  }
+}
