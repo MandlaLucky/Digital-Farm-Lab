@@ -4,6 +4,12 @@ dist/
 build/
 .next/
 
+android/
+ios/
+.capacitor/
+*.apk
+*.aab
+
 .env
 .env.local
 .env.docker

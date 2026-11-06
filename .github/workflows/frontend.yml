@@ -2,9 +2,9 @@ name: Frontend CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, feat/trainer-ui]
   pull_request:
-    branches: [main]
+    branches: [main, feat/trainer-ui]
 
 jobs:
   build:
@@ -14,13 +14,12 @@ jobs:
         working-directory: digital-farm-lab-frontend
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 12
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
-          cache: 'pnpm'
-          cache-dependency-path: digital-farm-lab-frontend/pnpm-lock.yaml
-      - run: pnpm install --no-frozen-lockfile --config.strictDepBuilds=false
-      - run: pnpm build
+          cache: 'npm'
+          cache-dependency-path: digital-farm-lab-frontend/package-lock.json
+      - name: npm ci
+        run: npm ci --no-audit --no-fund
+      - name: build (tsc + vite + PWA)
+        run: npm run build

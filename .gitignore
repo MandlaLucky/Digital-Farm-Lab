@@ -1,5 +1,3 @@
-# Subfolders have their own .gitignore. This is the outer safety net.
-
 # Secrets
 .env
 .env.local
@@ -24,4 +22,22 @@ node_modules/
 build/
 dist/
 .gradle/
-.env.docker
+target/
+.next/
+
+# Backup files from refactors
+*.bak
+*.bak-*
+*.prefix
+*.broken-*.bak
+
+# Old pnpm lockfiles (migrated to npm)
+pnpm-lock.yaml
+pnpm-workspace.yaml
+
+# Capacitor / mobile artifacts (regenerate with `npx cap add android`)
+digital-farm-lab-frontend/android/
+digital-farm-lab-frontend/ios/
+digital-farm-lab-frontend/.capacitor/
+*.apk
+*.aab

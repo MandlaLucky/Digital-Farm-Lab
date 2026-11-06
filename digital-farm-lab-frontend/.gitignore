@@ -1,28 +1,26 @@
-# Dependencies
 node_modules/
 .pnpm-store/
-
-# Build
 dist/
 build/
 .next/
 
-# Env
+android/
+ios/
+.capacitor/
+*.apk
+*.aab
+
 .env
 .env.local
 
-# IDE
 .vscode/
 .idea/
 *.iml
-
-# OS / Logs
 .DS_Store
 Thumbs.db
 *.log
 npm-debug.log*
 pnpm-debug.log*
 
-# Generated reports
 frontend-report.txt
 integration-files.txt
