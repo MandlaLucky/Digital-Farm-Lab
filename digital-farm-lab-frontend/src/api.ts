@@ -1,21 +1,22 @@
-// Typed wrappers around the Spring Boot workspace API. All requests go
-// through /api/v1/workspace/* — the Vite proxy injects the JWT and strips
-// the Origin header, so the browser never holds the token.
+// ═══════════════════════════════════════════════════════════════
+// API client — hardcoded for production demo
+// ═══════════════════════════════════════════════════════════════
 
-const API_ORIGIN = import.meta.env.VITE_API_URL || ''
-const BASE = `${API_ORIGIN}/api/v1/workspace`
-const AUTH: Record<string, string> = import.meta.env.VITE_DEV_TOKEN
-  ? { Authorization: `Bearer ${import.meta.env.VITE_DEV_TOKEN}` }
-  : {}
+const API_ORIGIN = 'https://farmlab-backend-57i8.onrender.com'
+const BASE = API_ORIGIN + '/api/v1/workspace'
+const TRAINER_BASE = API_ORIGIN + '/api/v1/trainer'
+const AUTH: Record<string, string> = {
+  Authorization: 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMTExMTExMS0xMTExLTExMTEtMTExMS0xMTExMTExMTExMTEiLCJyb2xlcyI6WyJMRUFSTkVSIiwiVFJBSU5FUiJdLCJpYXQiOjE3OTM5NDU5NjMsImV4cCI6MTgyNTQ4MTk2M30.8c8bKebgyF5GmKqp6lJCE7ME8etFrgHzmQUY31Wd8Sg',
+}
 
 async function request<T>(url: string, options?: RequestInit): Promise<T> {
   const res = await fetch(url, {
     ...options,
-    headers: { 'Content-Type': 'application/json', ...(options?.headers || {}) },
+    headers: { 'Content-Type': 'application/json', ...AUTH, ...(options?.headers || {}) },
   })
   if (!res.ok) {
     const text = await res.text().catch(() => '')
-    throw new Error(`${res.status} ${res.statusText}: ${text.slice(0, 200) || '(no body)'}`)
+    throw new Error(String(res.status) + ' ' + res.statusText + ': ' + (text.slice(0, 200) || '(no body)'))
   }
   if (res.status === 204) return undefined as T
   return res.json() as Promise<T>
@@ -39,9 +40,6 @@ export type BackendRun = {
   createdAt: string
 }
 
-
-
-// ── Trainer types (mirror the backend records) ────────────────────────
 export type TrainerExercise = {
   exerciseId: string
   moduleCode: string
@@ -96,27 +94,28 @@ export type TrainerReport = {
     createdAt: string
   }>
 }
+
 export const api = {
-  listFarms: () => request<BackendFarm[]>(`${BASE}/farms`),
+  listFarms: () => request<BackendFarm[]>(BASE + '/farms'),
   createFarm: (data: Record<string, unknown>) =>
-    request<BackendFarm>(`${BASE}/farms`, { method: 'POST', body: JSON.stringify(data) }),
+    request<BackendFarm>(BASE + '/farms', { method: 'POST', body: JSON.stringify(data) }),
   updateFarm: (id: string, data: Record<string, unknown>) =>
-    request<BackendFarm>(`${BASE}/farms/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    request<BackendFarm>(BASE + '/farms/' + id, { method: 'PUT', body: JSON.stringify(data) }),
   deleteFarm: (id: string) =>
-    request<void>(`${BASE}/farms/${id}`, { method: 'DELETE' }),
+    request<void>(BASE + '/farms/' + id, { method: 'DELETE' }),
 
-  listScenarios: () => request<BackendScenario[]>(`${BASE}/scenarios`),
+  listScenarios: () => request<BackendScenario[]>(BASE + '/scenarios'),
   createScenario: (data: Record<string, unknown>) =>
-    request<BackendScenario>(`${BASE}/scenarios`, { method: 'POST', body: JSON.stringify(data) }),
+    request<BackendScenario>(BASE + '/scenarios', { method: 'POST', body: JSON.stringify(data) }),
   updateScenario: (id: string, data: Record<string, unknown>) =>
-    request<BackendScenario>(`${BASE}/scenarios/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    request<BackendScenario>(BASE + '/scenarios/' + id, { method: 'PUT', body: JSON.stringify(data) }),
   deleteScenario: (id: string) =>
-    request<void>(`${BASE}/scenarios/${id}`, { method: 'DELETE' }),
+    request<void>(BASE + '/scenarios/' + id, { method: 'DELETE' }),
 
-  listRuns: () => request<BackendRun[]>(`${BASE}/runs`),
+  listRuns: () => request<BackendRun[]>(BASE + '/runs'),
   createRun: (data: Record<string, unknown>) =>
-    request<BackendRun>(`${BASE}/runs`, { method: 'POST', body: JSON.stringify(data) }),
+    request<BackendRun>(BASE + '/runs', { method: 'POST', body: JSON.stringify(data) }),
 
-  trainerListExercises: () => request<TrainerExercise[]>(`/api/v1/trainer/exercises`),
-  trainerExerciseReport: (id: string) => request<TrainerReport>(`/api/v1/trainer/exercises/${id}/report`),
+  trainerListExercises: () => request<TrainerExercise[]>(TRAINER_BASE + '/exercises'),
+  trainerExerciseReport: (id: string) => request<TrainerReport>(TRAINER_BASE + '/exercises/' + id + '/report'),
 }
