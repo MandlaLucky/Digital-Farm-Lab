@@ -1,8 +1,8 @@
+# Docker / cloud profile — activated via SPRING_PROFILES_ACTIVE=docker
+# All values come from environment variables set by docker-compose or Render.
 server:
-  port: ${port: ${PORT:8081}}
+  port: ${PORT:8081}
 
-# Docker profile — activated via SPRING_PROFILES_ACTIVE=docker.
-# All values come from environment variables (set by docker-compose).
 spring:
   datasource:
     url: ${DB_URL:jdbc:postgresql://postgres:5432/digitalfarm_DB}
@@ -10,6 +10,9 @@ spring:
     password: ${DB_PASSWORD:123456}
   jpa:
     show-sql: false
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
   flyway:
     enabled: true
     baseline-on-migrate: true
@@ -18,7 +21,7 @@ security:
   jwt:
     secret: ${JWT_SECRET:dev-only-do-not-deploy-please-change-this-secret-2026}
   cors:
-    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost,http://localhost:80}
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost,http://localhost:80,https://digital-farm-lab.vercel.app}
 
 logging:
   level:
