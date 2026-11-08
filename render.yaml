@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: farmlab-backend
+    env: docker
+    plan: free
+    dockerContext: ./digital-farm-lab-backend
+    dockerfilePath: Dockerfile
+    healthCheckPath: /actuator/health
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: docker
+      - key: DB_URL
+        fromDatabase:
+          name: farmlab-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CORS_ALLOWED_ORIGINS
+        value: https://your-vercel-app.vercel.app
+databases:
+  - name: farmlab-db
+    plan: free
+    databaseName: digitalfarm_DB
+    user: farmlab_user
