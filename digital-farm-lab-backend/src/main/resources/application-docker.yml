@@ -1,5 +1,5 @@
 server:
-  port: 8081
+  port: ${port: ${PORT:8081}}
 
 # Docker profile — activated via SPRING_PROFILES_ACTIVE=docker.
 # All values come from environment variables (set by docker-compose).
