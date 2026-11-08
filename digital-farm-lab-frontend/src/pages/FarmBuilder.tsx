@@ -179,7 +179,7 @@ export default function FarmBuilder({ farm, setFarm, onSave, onBack, onSimulate,
                 onClick={() => setSelection({ type: 'field', id: field.id })}
                 onPointerDown={event => beginDrag(event, 'field', field.id)}
               >
-                <span className="builder-crop-rows" /><span className="builder-field-label"><strong>{field.name}</strong><small>{field.crop === 'none' ? 'UNPLANTED' : field.crop.toUpperCase()} · {field.size} ha</small></span>
+                <CropPlants crop={field.crop} /><span className="builder-field-label"><strong>{field.name}</strong><small>{field.crop === 'none' ? 'UNPLANTED' : field.crop.toUpperCase()} · {field.size} ha</small></span>
                 <span className="builder-field-meta">{field.soil}<i>{field.irrigation}</i></span>
                 <span className="resize-corner" />
               </Button>
@@ -229,6 +229,17 @@ export default function FarmBuilder({ farm, setFarm, onSave, onBack, onSimulate,
           )}
         </aside>
       </div>
+    </div>
+  )
+}
+
+function CropPlants({ crop }: { crop: string }) {
+  if (crop === 'none') return null
+  return (
+    <div className={`crop-plants crop-${crop}`} aria-hidden="true">
+      {Array.from({ length: 20 }).map((_, i) => (
+        <span key={i} className="plant" />
+      ))}
     </div>
   )
 }

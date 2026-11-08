@@ -514,3 +514,145 @@
   font-family: 'JetBrains Mono', monospace; z-index: 2000;
   box-shadow: 0 4px 12px rgba(0, 0, 0, .3);
 }
+/* ═══════════════════════════════════════════════════════════════
+   PHONE-SPECIFIC OVERRIDES — makes the app usable on a phone
+   ═══════════════════════════════════════════════════════════════ */
+@media (max-width: 640px) {
+  html, body, #root {
+    overflow: auto !important;
+    height: auto !important;
+    min-height: 100dvh !important;
+  }
+  .app, .simulator-shell, .builder-shell, .scenario-shell {
+    height: auto !important;
+    min-height: 100dvh !important;
+  }
+  .workspace, .builder-workspace, .scenario-builder-workspace {
+    grid-template-columns: 1fr !important;
+    min-width: 0 !important;
+  }
+  .component-library, .properties-panel,
+  .builder-config, .builder-inspector,
+  .scenario-settings, .scenario-objectives {
+    display: flex !important;
+    min-height: auto !important;
+    border-top: 1px solid var(--line) !important;
+  }
+  .library-group > span, .component-grid strong,
+  .measurement-strip span, .measurement-strip em,
+  .property-row > span, .chart-heading span,
+  .field-tag strong, .field-tag small,
+  .selection-summary strong, .builder-control > span {
+    font-size: 11px !important;
+  }
+  .measurement-strip strong { font-size: 22px !important; }
+  .btn { min-height: 36px; }
+  .component-grid .btn { min-height: 80px; }
+  .tool { width: 36px !important; height: 36px !important; }
+  .app-nav nav {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .app-nav nav::-webkit-scrollbar { display: none; }
+  .simulation-controls {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+    padding: 10px !important;
+    height: auto !important;
+  }
+  .simulation-controls .timeline,
+  .simulation-controls .speed-control {
+    width: 100%;
+  }
+}
+/* ═══ 2D CROP PLANTS — per-crop visuals on the field ═══ */
+.crop-plants {
+  position: absolute; inset: 6%;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  grid-template-rows: repeat(4, 1fr);
+  align-items: center; justify-items: center;
+  pointer-events: none; z-index: 1;
+}
+.plant {
+  position: relative;
+  width: 6px; height: 6px;
+  background: #4a8a3a;
+  border-radius: 50%;
+  filter: drop-shadow(0 1px 1px rgba(0,0,0,.4));
+}
+/* MAIZE — tall green stalk with yellow tassel */
+.crop-maize .plant {
+  width: 3px; height: 16px;
+  background: linear-gradient(180deg, #6fa843, #4a8a3a);
+  border-radius: 1px;
+}
+.crop-maize .plant::before {
+  content: ''; position: absolute;
+  top: -5px; left: 50%; transform: translateX(-50%);
+  width: 5px; height: 6px;
+  background: #c8b84a; border-radius: 50% 50% 0 0;
+}
+.crop-maize .plant::after {
+  content: ''; position: absolute;
+  top: 6px; left: -3px; width: 8px; height: 4px;
+  background: #5ea83e; border-radius: 50% 20% 20% 50%;
+  transform: rotate(-20deg);
+}
+/* WHEAT — thin golden stalk with grain head */
+.crop-wheat .plant {
+  width: 2px; height: 14px;
+  background: linear-gradient(180deg, #c4b04a, #8a7a30);
+  border-radius: 1px;
+}
+.crop-wheat .plant::before {
+  content: ''; position: absolute;
+  top: -7px; left: 50%; transform: translateX(-50%);
+  width: 5px; height: 9px;
+  background: radial-gradient(ellipse at top, #e2d46c, #b8a840);
+  border-radius: 50% 50% 30% 30%;
+}
+/* SOYBEAN — round bush with two leaf dots */
+.crop-soybean .plant {
+  width: 8px; height: 8px;
+  background: radial-gradient(circle at 40% 40%, #7cbe5c, #4a9a3a);
+  border-radius: 50%;
+}
+.crop-soybean .plant::before,
+.crop-soybean .plant::after {
+  content: ''; position: absolute;
+  width: 4px; height: 4px;
+  background: #7cbe5c;
+  border-radius: 50% 50% 50% 50% / 40% 40% 60% 60%;
+}
+.crop-soybean .plant::before { top: -2px; left: -4px; transform: rotate(-20deg); }
+.crop-soybean .plant::after  { top: -2px; right: -4px; transform: rotate(20deg); }
+/* SUNFLOWER — tall stalk, big yellow head */
+.crop-sunflower .plant {
+  width: 3px; height: 16px;
+  background: linear-gradient(180deg, #6fa843, #3e7a2a);
+  border-radius: 1px;
+}
+.crop-sunflower .plant::before {
+  content: ''; position: absolute;
+  top: -8px; left: 50%; transform: translateX(-50%);
+  width: 10px; height: 10px;
+  background: radial-gradient(circle, #3d2d1c 22%, #e8c44a 28%, #e8c44a 68%, #d4a830 78%);
+  border-radius: 50%;
+}
+/* VEGETABLES — low bushy cluster */
+.crop-vegetables .plant {
+  width: 12px; height: 6px;
+  background: radial-gradient(ellipse at center, #6fa843 30%, #4a8a3a 90%);
+  border-radius: 50% 50% 30% 30%;
+}
+.crop-vegetables .plant::before {
+  content: ''; position: absolute;
+  top: -2px; left: 50%; transform: translateX(-50%);
+  width: 6px; height: 4px;
+  background: #7cbe5c; border-radius: 50%;
+}
+.is-running .crop-plants .plant {
+  animation: cropShimmer 3s ease-in-out infinite;
+}
