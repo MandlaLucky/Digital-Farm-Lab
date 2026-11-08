@@ -2,9 +2,9 @@ name: Backend CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, feat/trainer-ui]
   pull_request:
-    branches: [main]
+    branches: [main, feat/trainer-ui]
 
 jobs:
   test:
@@ -18,9 +18,9 @@ jobs:
         with:
           java-version: '21'
           distribution: 'temurin'
-      - name: Make gradlew executable
+      - name: Grant gradlew
         run: chmod +x gradlew
-      - name: Run ScenarioEngineTest (12 tests)
-        run: ./gradlew test --tests "com.mlm.digitalfarm.service.ScenarioEngineTest" --no-daemon
-      - name: Assemble (skip tests)
-        run: ./gradlew assemble -x test --no-daemon
+      - name: Unit tests (12)
+        run: ./gradlew test --no-daemon --console=plain
+      - name: Assemble
+        run: ./gradlew assemble -x test --no-daemon --console=plain

@@ -1,0 +1,66 @@
+services:
+  postgres:
+    image: postgres:18-alpine
+    container_name: farmlab-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB:       ${POSTGRES_DB:-digitalfarm_DB}
+      POSTGRES_USER:     ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-123456}
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    ports:
+      - "${POSTGRES_PORT:-5433}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-digitalfarm_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+    networks:
+      - farmlab
+
+  backend:
+    build:
+      context: ./digital-farm-lab-backend
+      dockerfile: Dockerfile
+    container_name: farmlab-backend
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      DB_URL:      jdbc:postgresql://postgres:5432/${POSTGRES_DB:-digitalfarm_DB}
+      DB_USER:     ${POSTGRES_USER:-postgres}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-123456}
+      JWT_SECRET:  ${JWT_SECRET:-dev-only-do-not-deploy-please-change-this-secret-2026}
+    ports:
+      - "${BACKEND_PORT:-8082}:8081"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - farmlab
+
+  frontend:
+    build:
+      context: ./digital-farm-lab-frontend
+      dockerfile: Dockerfile
+    container_name: farmlab-frontend
+    restart: unless-stopped
+    environment:
+      SPRING_DEV_TOKEN: ${SPRING_DEV_TOKEN}
+    ports:
+      - "${FRONTEND_PORT:-8080}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - farmlab
+
+volumes:
+  postgres_data:
+    name: farmlab-postgres-data
+
+networks:
+  farmlab:
+    name: farmlab-net
+    driver: bridge

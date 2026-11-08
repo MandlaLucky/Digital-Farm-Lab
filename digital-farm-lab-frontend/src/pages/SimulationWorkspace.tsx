@@ -348,7 +348,7 @@ export default function SimulationWorkspace({ farm, scenario, onBack, onScenario
                 style={{ left: `${field.x}%`, top: `${field.y}%`, width: `${field.width}%`, height: `${field.height}%` }}
                 onClick={() => selectCanvasItem({ id: field.id, kind: 'field', name: `${field.name} · ${field.crop}` })}
               >
-                <span className={`crop-rows ${field.crop}`} />
+                <CropPlants crop={field.crop} />
                 <span className="field-tag"><strong>{field.name.toUpperCase()}</strong><small>{field.crop.toUpperCase()} · {field.size} ha</small></span>
                 <span className="moisture-badge"><Icon name="droplet" size={12} /> {Math.max(25, Math.min(88, moisture + index * 3 - 4))}%</span>
               </Button>
@@ -458,6 +458,17 @@ export default function SimulationWorkspace({ farm, scenario, onBack, onScenario
   )
 }
 
+
+function CropPlants({ crop }: { crop: string }) {
+  if (crop === 'none') return null
+  return (
+    <div className={`crop-plants crop-${crop}`} aria-hidden="true">
+      {Array.from({ length: 20 }).map((_, i) => (
+        <span key={i} className="plant" />
+      ))}
+    </div>
+  )
+}
 function simulationTime(progress: number) {
   const totalMinutes = Math.floor(progress * 17.2)
   const hours = Math.floor(totalMinutes / 60) % 24

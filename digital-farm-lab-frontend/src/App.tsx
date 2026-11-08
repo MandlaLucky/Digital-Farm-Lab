@@ -10,6 +10,7 @@ import type { PersistedFarm, RunRecord, ScenarioRecord } from './scenarioTypes'
 import { demoFarm, presetScenarios, uid, usePersistentState } from './store'
 import { api } from './api'
 import TrainerPage from './pages/Trainer'
+import InstallPrompt from './components/InstallPrompt'
 
 type Section = 'setup' | 'builder' | 'scenarios' | 'simulation' | 'results' | 'trainer'
 
@@ -181,6 +182,8 @@ export default function App() {
 
       {backendMsg && <div className="backend-banner">{backendMsg}</div>}
 
+      <InstallPrompt />
+
       <div className="app-content">
         {section === 'setup' && <FarmSetup farm={draft} farms={farms} onChange={patchDraft} onLoad={loadFarm} onNext={() => setSection('builder')} />}
         {section === 'builder' && <FarmBuilder farm={draft} setFarm={fn => setDraft(c => fn(normalizeFarm(c)))} onSave={saveFarm} onBack={() => setSection('setup')} onSimulate={() => startFreeSim(draft)} farms={farms} onLoad={loadFarm} />}
@@ -196,8 +199,8 @@ export default function App() {
               </div>
             </div>
           ))}
-        {section === 'results' && <Results run={currentRun ?? runs[0] ?? null}
-        {section === 'trainer' && <TrainerPage />} history={runs} onSelect={setCurrentRun} onBrowse={() => { setScenarioTab('browse'); setSection('scenarios') }} onSimulate={goSimulation} />}
+        {section === 'results' && <Results run={currentRun ?? runs[0] ?? null} history={runs} onSelect={setCurrentRun} onBrowse={() => { setScenarioTab('browse'); setSection('scenarios') }} onSimulate={goSimulation} />}
+        {section === 'trainer' && <TrainerPage />}
       </div>
     </div>
   )
