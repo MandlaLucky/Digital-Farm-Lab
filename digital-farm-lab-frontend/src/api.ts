@@ -2,7 +2,11 @@
 // through /api/v1/workspace/* — the Vite proxy injects the JWT and strips
 // the Origin header, so the browser never holds the token.
 
-const BASE = '/api/v1/workspace'
+const API_ORIGIN = import.meta.env.VITE_API_URL || ''
+const BASE = `${API_ORIGIN}/api/v1/workspace`
+const AUTH: Record<string, string> = import.meta.env.VITE_DEV_TOKEN
+  ? { Authorization: `Bearer ${import.meta.env.VITE_DEV_TOKEN}` }
+  : {}
 
 async function request<T>(url: string, options?: RequestInit): Promise<T> {
   const res = await fetch(url, {
