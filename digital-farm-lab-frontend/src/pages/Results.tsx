@@ -127,7 +127,30 @@ export default function Results({ run, history, onSelect, onBrowse, onSimulate }
         <div className="title-actions"><Button onClick={shareResults}><Icon name="arrow" size={15} /> Share</Button><Button onClick={onSimulate}><Icon name="reset" size={15} /> Run again</Button><Button className="primary-action" onClick={onBrowse}>Try another scenario <Icon name="arrow" size={15} /></Button></div>
       </div>
 
-      <section className="summary-card">
+      <section className="summary-card" style={{ borderColor: 'rgba(220,173,81,.35)', background: 'linear-gradient(135deg, rgba(220,173,81,.06), var(--panel))' }}>
+  <span style={{ color: 'var(--amber)' }}>TRANSPARENCY · REAL vs TEACHING</span>
+  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 10, fontSize: 12, lineHeight: 1.6 }}>
+    <div>
+      <strong style={{ color: 'var(--green)', display: 'block', marginBottom: 6 }}>REAL — Spring Boot + PostgreSQL</strong>
+      <ul style={{ margin: 0, paddingLeft: 18, color: '#9db3ab' }}>
+        <li>Simulator score (computed server-side, persisted to DB)</li>
+        <li>Yield, water, cost, gross margin in the A14 ENGINE panel</li>
+        <li>FAO-56 water balance + Mitscherlich fertiliser response</li>
+        <li>JWT-authenticated, survives restart</li>
+      </ul>
+    </div>
+    <div>
+      <strong style={{ color: 'var(--amber)', display: 'block', marginBottom: 6 }}>TEACHING LAYER — client-side, illustrative</strong>
+      <ul style={{ margin: 0, paddingLeft: 18, color: '#9db3ab' }}>
+        <li>Animated soil moisture / growth curve</li>
+        <li>Criteria breakdown math (client formula)</li>
+        <li>Event log timestamps</li>
+      </ul>
+    </div>
+  </div>
+  <p className="muted-note" style={{ marginTop: 10 }}>Integrations AgriLearn (A3) and Passport (A2) are mocked — real integration requires partner teams APIs. Identity uses a dev JWT (real A1 required for production). See AGENTS.md.</p>
+</section>
+<section className="summary-card">
         <span>SUMMARY</span>
         <p>This run scored <strong>{sc.overall}/100 ({grade(sc.overall)})</strong>. Your strongest area was <strong>{best[0]}</strong> ({best[1]}) and your weakest was <strong>{worst[0]}</strong> ({worst[1]}). {run.complete ? 'The crop reached maturity' : `The simulation was stopped on day ${run.dayReached}, with the crop at ${run.metrics.growth}% of full growth`}, with an estimated yield of <strong>{run.metrics.yieldTHa} t/ha</strong> using {run.metrics.waterUsed} m³ of water. {achieved} of {run.objectives.length} learning objective{run.objectives.length === 1 ? ' was' : 's were'} met.</p>
       </section>
@@ -148,6 +171,10 @@ export default function Results({ run, history, onSelect, onBrowse, onSimulate }
 
       <div className="kpi-row">{kpis.map(k => <div className="kpi" key={k.label}><span>{k.label}</span><strong>{k.value}<small>{k.unit}</small></strong><em>{k.sub}</em></div>)}</div>
 
+            <section className="panel-card wide" style={{ borderColor: 'rgba(85,216,139,.3)', background: 'rgba(85,216,139,.03)' }}>
+        <div className="panel-card-title"><span>SCORING SOURCE</span><strong>Scores use real engine output</strong></div>
+        <p className="muted-note">Scores are computed by comparing real backend engine output (FAO-56) against the field baseline. When the backend is unreachable, a client-side teaching formula is used instead. See the A14 ENGINE panel below for the raw engine values.</p>
+      </section>
       <div className="results-grid">
         <section className="panel-card wide">
           <div className="panel-card-title"><span>WHAT HAPPENED</span><strong>The season over time</strong></div>

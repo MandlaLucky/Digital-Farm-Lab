@@ -4,6 +4,7 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
+
   return {
     plugins: [
       react(),
@@ -38,7 +39,7 @@ export default defineConfig(({ mode }) => {
               options: {
                 cacheName: 'farmlab-api',
                 expiration: { maxEntries: 100, maxAgeSeconds: 3600 },
-                networkTimeoutSeconds: 10,
+                networkTimeoutSeconds: 30,
                 cacheableResponse: { statuses: [0, 200, 201, 204] }
               }
             }
@@ -54,10 +55,17 @@ export default defineConfig(({ mode }) => {
         '/api': {
           target: env.SPRING_API_URL || 'http://localhost:8081',
           changeOrigin: true,
+          secure: true,
+          timeout: 60000,
+          proxyTimeout: 60000,
           configure: (proxy) => {
             proxy.on('proxyReq', (proxyReq) => {
               const token = env.SPRING_DEV_TOKEN
-              if (token) proxyReq.setHeader('Authorization', `Bearer ${token}`)
+              if (token) {
+                proxyReq.setHeader('Authorization', `Bearer ${token}`)
+              }
+              // Strip Origin/Referer — this is server-to-server, not browser-to-server.
+              // Spring Boot CORS won't reject because no Origin header arrives.
               proxyReq.removeHeader('origin')
               proxyReq.removeHeader('referer')
             })
